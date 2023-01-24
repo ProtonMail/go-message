@@ -336,7 +336,8 @@ func (mr *MultipartReader) isBoundaryDelimiterLine(line []byte) (ret bool) {
 
 // skipLWSPChar returns b with leading spaces and tabs removed.
 // RFC 822 defines:
-//    LWSP-char = SPACE / HTAB
+//
+//	LWSP-char = SPACE / HTAB
 func skipLWSPChar(b []byte) []byte {
 	for len(b) > 0 && (b[0] == ' ' || b[0] == '\t') {
 		b = b[1:]
@@ -412,21 +413,27 @@ func randomBoundary() string {
 // Writer. After calling CreatePart, any previous part may no longer
 // be written to.
 func (w *MultipartWriter) CreatePart(header Header) (io.Writer, error) {
+	var b bytes.Buffer
+	return w.CreatePartWithBuffer(header, &b)
+}
+
+// CreatePartWithBuffer is the same as CreatePart but uses the provided byte buffer rather than allocating a new one.
+func (w *MultipartWriter) CreatePartWithBuffer(header Header, b *bytes.Buffer) (io.Writer, error) {
 	if w.lastpart != nil {
 		if err := w.lastpart.close(); err != nil {
 			return nil, err
 		}
 	}
-	var b bytes.Buffer
+
 	if w.lastpart != nil {
-		fmt.Fprintf(&b, "\r\n--%s\r\n", w.boundary)
+		fmt.Fprintf(b, "\r\n--%s\r\n", w.boundary)
 	} else {
-		fmt.Fprintf(&b, "--%s\r\n", w.boundary)
+		fmt.Fprintf(b, "--%s\r\n", w.boundary)
 	}
 
-	WriteHeader(&b, header)
+	WriteHeader(b, header)
 
-	_, err := io.Copy(w.w, &b)
+	_, err := io.Copy(w.w, b)
 	if err != nil {
 		return nil, err
 	}

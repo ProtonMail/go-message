@@ -49,3 +49,17 @@ func TestWriter_multipartWithoutBoundary(t *testing.T) {
 		t.Error("Expected boundary to be automatically generated")
 	}
 }
+
+func TestWriter_longHeaderFieldDoesNotCrash(t *testing.T) {
+	var h Header
+	h.Set("Content-Type-Very-Long-Header-For-Whatever-Reason-Now-What-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "multipart/alternative; boundary=IMTHEBOUNDARY")
+
+	var b bytes.Buffer
+	mw, err := CreateWriter(&b, h)
+	if err != nil {
+		t.Fatal("Expected no error while creating message writer, got:", err)
+	}
+
+	io.WriteString(mw, testMultipartBody)
+	mw.Close()
+}

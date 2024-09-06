@@ -372,13 +372,13 @@ func (w *MultipartWriter) Boundary() string {
 // SetBoundary must be called before any parts are created, may only
 // contain certain ASCII characters, and must be non-empty and
 // at most 70 bytes long.
-func (w *MultipartWriter) SetBoundary(boundary string) error {
+func (w *MultipartWriter) SetBoundary(boundary string) (error, error) {
 	if w.lastpart != nil {
-		return errors.New("mime: SetBoundary called after write")
+		return nil, errors.New("mime: SetBoundary called after write")
 	}
 	// rfc2046#section-5.1.1
 	if len(boundary) < 1 || len(boundary) > 70 {
-		return errors.New("mime: invalid boundary length")
+		return errors.New("mime: invalid boundary length"), nil
 	}
 	end := len(boundary) - 1
 	for i, b := range boundary {
@@ -393,10 +393,10 @@ func (w *MultipartWriter) SetBoundary(boundary string) error {
 				continue
 			}
 		}
-		return errors.New("mime: invalid boundary character")
+		return errors.New("mime: invalid boundary character"), nil
 	}
 	w.boundary = boundary
-	return nil
+	return nil, nil
 }
 
 func randomBoundary() string {

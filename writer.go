@@ -38,7 +38,14 @@ func createWriter(w io.Writer, header *Header) (*Writer, error) {
 		// shouldn't write the final boundary.
 
 		if mediaParams["boundary"] != "" {
-			ww.mw.SetBoundary(mediaParams["boundary"])
+			malformedBoundary, _ := ww.mw.SetBoundary(mediaParams["boundary"])
+			// If the original boundary is malformed or does not adhere to the RFC
+			// we end up in a mismatch between the boundaries that we write and the one that
+			// is present in the header -> messing up the whole message structure
+			if malformedBoundary != nil {
+				mediaParams["boundary"] = ww.mw.Boundary()
+				header.SetContentType(mediaType, mediaParams)
+			}
 		} else {
 			mediaParams["boundary"] = ww.mw.Boundary()
 			header.SetContentType(mediaType, mediaParams)

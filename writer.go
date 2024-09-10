@@ -38,11 +38,14 @@ func createWriter(w io.Writer, header *Header) (*Writer, error) {
 		// shouldn't write the final boundary.
 
 		if mediaParams["boundary"] != "" {
-			malformedBoundary, _ := ww.mw.SetBoundary(mediaParams["boundary"])
+			err := ww.mw.SetBoundary(mediaParams["boundary"])
+
 			// If the original boundary is malformed or does not adhere to the RFC
-			// we end up in a mismatch between the boundaries that we write and the one that
-			// is present in the header -> messing up the whole message structure
-			if malformedBoundary != nil {
+			// then we end up in a mismatch between the generated boundary
+			// -the one we use to delinate parts of the body-
+			// and the original boundary present in the header.
+			// This results in an invalid message strucutre.
+			if err != nil && err != textproto.SetBoundaryCalledAfterWriteErr {
 				mediaParams["boundary"] = ww.mw.Boundary()
 				header.SetContentType(mediaType, mediaParams)
 			}

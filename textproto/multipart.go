@@ -17,6 +17,7 @@ import (
 	"io/ioutil"
 )
 
+var SetBoundaryCalledAfterWriteErr = errors.New("mime: SetBoundary called after write")
 var emptyParams = make(map[string]string)
 
 // This constant needs to be at least 76 for this package to work correctly.
@@ -372,13 +373,13 @@ func (w *MultipartWriter) Boundary() string {
 // SetBoundary must be called before any parts are created, may only
 // contain certain ASCII characters, and must be non-empty and
 // at most 70 bytes long.
-func (w *MultipartWriter) SetBoundary(boundary string) (error, error) {
+func (w *MultipartWriter) SetBoundary(boundary string) error {
 	if w.lastpart != nil {
-		return nil, errors.New("mime: SetBoundary called after write")
+		return SetBoundaryCalledAfterWriteErr
 	}
 	// rfc2046#section-5.1.1
 	if len(boundary) < 1 || len(boundary) > 70 {
-		return errors.New("mime: invalid boundary length"), nil
+		return errors.New("mime: invalid boundary length")
 	}
 	end := len(boundary) - 1
 	for i, b := range boundary {
@@ -393,10 +394,10 @@ func (w *MultipartWriter) SetBoundary(boundary string) (error, error) {
 				continue
 			}
 		}
-		return errors.New("mime: invalid boundary character"), nil
+		return errors.New("mime: invalid boundary character")
 	}
 	w.boundary = boundary
-	return nil, nil
+	return nil
 }
 
 func randomBoundary() string {

@@ -17,6 +17,7 @@ import (
 	"io/ioutil"
 )
 
+var SetBoundaryCalledAfterWriteErr = errors.New("mime: SetBoundary called after write")
 var emptyParams = make(map[string]string)
 
 // This constant needs to be at least 76 for this package to work correctly.
@@ -374,7 +375,7 @@ func (w *MultipartWriter) Boundary() string {
 // at most 70 bytes long.
 func (w *MultipartWriter) SetBoundary(boundary string) error {
 	if w.lastpart != nil {
-		return errors.New("mime: SetBoundary called after write")
+		return SetBoundaryCalledAfterWriteErr
 	}
 	// rfc2046#section-5.1.1
 	if len(boundary) < 1 || len(boundary) > 70 {
